@@ -4409,86 +4409,87 @@ do_sign (app_t app, const char *keyidstr, int hashalgo,
   if (!keyidstr || !*keyidstr)
     return gpg_error (GPG_ERR_INV_VALUE);
 
-  /* Strip off known prefixes.  */
-#define X(a,b,c,d) \
-  if (hashalgo == GCRY_MD_ ## a                               \
-      && (d)                                                  \
-      && indatalen == sizeof b ## _prefix + (c)               \
-      && !memcmp (indata, b ## _prefix, sizeof b ## _prefix)) \
-    {                                                         \
-      indata = (const char*)indata + sizeof b ## _prefix;     \
-      indatalen -= sizeof b ## _prefix;                       \
-    }
+/*   /\* Strip off known prefixes.  *\/ */
+/* #define X(a,b,c,d) \ */
+/*   if (hashalgo == GCRY_MD_ ## a                               \ */
+/*       && (d)                                                  \ */
+/*       && indatalen == sizeof b ## _prefix + (c)               \ */
+/*       && !memcmp (indata, b ## _prefix, sizeof b ## _prefix)) \ */
+/*     {                                                         \ */
+/*       indata = (const char*)indata + sizeof b ## _prefix;     \ */
+/*       indatalen -= sizeof b ## _prefix;                       \ */
+/*     } */
 
-  if (indatalen == 20)
-    ;  /* Assume a plain SHA-1 or RMD160 digest has been given.  */
-  else X(SHA1,   sha1,   20, 1)
-  else X(RMD160, rmd160, 20, 1)
-  else X(SHA224, sha224, 28, app->app_local->extcap.is_v2)
-  else X(SHA256, sha256, 32, app->app_local->extcap.is_v2)
-  else X(SHA384, sha384, 48, app->app_local->extcap.is_v2)
-  else X(SHA512, sha512, 64, app->app_local->extcap.is_v2)
-  else if ((indatalen == 28 || indatalen == 32
-            || indatalen == 48 || indatalen ==64)
-           && app->app_local->extcap.is_v2)
-    ;  /* Assume a plain SHA-3 digest has been given.  */
-  else
-    {
-      log_error (_("card does not support digest algorithm %s\n"),
-                 gcry_md_algo_name (hashalgo));
-      /* Or the supplied digest length does not match an algorithm.  */
-      return gpg_error (GPG_ERR_INV_VALUE);
-    }
-#undef X
+/*   if (indatalen == 20) */
+/*     ;  /\* Assume a plain SHA-1 or RMD160 digest has been given.  *\/ */
+/*   else X(SHA1,   sha1,   20, 1) */
+/*   else X(RMD160, rmd160, 20, 1) */
+/*   else X(SHA224, sha224, 28, app->app_local->extcap.is_v2) */
+/*   else X(SHA256, sha256, 32, app->app_local->extcap.is_v2) */
+/*   else X(SHA384, sha384, 48, app->app_local->extcap.is_v2) */
+/*   else X(SHA512, sha512, 64, app->app_local->extcap.is_v2) */
+/*   else if ((indatalen == 28 || indatalen == 32 */
+/*             || indatalen == 48 || indatalen ==64) */
+/*            && app->app_local->extcap.is_v2) */
+/*     ;  /\* Assume a plain SHA-3 digest has been given.  *\/ */
+/*   else */
+/*     { */
+/*       log_error (_("card does not support digest algorithm %s\n"), */
+/*                  gcry_md_algo_name (hashalgo)); */
+/*       /\* Or the supplied digest length does not match an algorithm.  *\/ */
+/*       return gpg_error (GPG_ERR_INV_VALUE); */
+/*     } */
+/* #undef X */
 
-  /* Check whether an OpenPGP card of any version has been requested. */
-  if (!strcmp (keyidstr, "OPENPGP.1"))
-    ;
-  else if (!strcmp (keyidstr, "OPENPGP.3"))
-    use_auth = 1;
-  else
-    {
-      rc = check_keyidstr (app, keyidstr, 1);
-      if (rc)
-        return rc;
-    }
+/*   /\* Check whether an OpenPGP card of any version has been requested. *\/ */
+/*   if (!strcmp (keyidstr, "OPENPGP.1")) */
+/*     ; */
+/*   else if (!strcmp (keyidstr, "OPENPGP.3")) */
+/*     use_auth = 1; */
+/*   else */
+/*     { */
+/*       rc = check_keyidstr (app, keyidstr, 1); */
+/*       if (rc) */
+/*         return rc; */
+/*     } */
 
-  /* Concatenate prefix and digest.  */
-#define X(a,b,d) \
-  if (hashalgo == GCRY_MD_ ## a && (d) )                      \
-    {                                                         \
-      datalen = sizeof b ## _prefix + indatalen;              \
-      assert (datalen <= sizeof data);                        \
-      memcpy (data, b ## _prefix, sizeof b ## _prefix);       \
-      memcpy (data + sizeof b ## _prefix, indata, indatalen); \
-    }
+/*   /\* Concatenate prefix and digest.  *\/ */
+/* #define X(a,b,d) \ */
+/*   if (hashalgo == GCRY_MD_ ## a && (d) )                      \ */
+/*     {                                                         \ */
+/*       datalen = sizeof b ## _prefix + indatalen;              \ */
+/*       assert (datalen <= sizeof data);                        \ */
+/*       memcpy (data, b ## _prefix, sizeof b ## _prefix);       \ */
+/*       memcpy (data + sizeof b ## _prefix, indata, indatalen); \ */
+/*     } */
 
-  if (use_auth
-      || app->app_local->keyattr[use_auth? 2: 0].key_type == KEY_TYPE_RSA)
-    {
-      X(SHA1,   sha1,   1)
-      else X(RMD160, rmd160, 1)
-      else X(SHA224, sha224, app->app_local->extcap.is_v2)
-      else X(SHA256, sha256, app->app_local->extcap.is_v2)
-      else X(SHA384, sha384, app->app_local->extcap.is_v2)
-      else X(SHA512, sha512, app->app_local->extcap.is_v2)
-      else
-        return gpg_error (GPG_ERR_UNSUPPORTED_ALGORITHM);
-    }
-  else
-    {
+/*   if (use_auth */
+/*       || app->app_local->keyattr[use_auth? 2: 0].key_type == KEY_TYPE_RSA) */
+/*     { */
+/*       X(SHA1,   sha1,   1) */
+/*       else X(RMD160, rmd160, 1) */
+/*       else X(SHA224, sha224, app->app_local->extcap.is_v2) */
+/*       else X(SHA256, sha256, app->app_local->extcap.is_v2) */
+/*       else X(SHA384, sha384, app->app_local->extcap.is_v2) */
+/*       else X(SHA512, sha512, app->app_local->extcap.is_v2) */
+/*       else */
+/*         return gpg_error (GPG_ERR_UNSUPPORTED_ALGORITHM); */
+/*     } */
+/*   else */
+/*     { */
       datalen = indatalen;
       memcpy (data, indata, indatalen);
-    }
-#undef X
+/*     } */
+/* #undef X */
 
-  /* Redirect to the AUTH command if asked to. */
-  if (use_auth)
-    {
-      return do_auth (app, "OPENPGP.3", pincb, pincb_arg,
-                      data, datalen,
-                      outdata, outdatalen);
-    }
+
+/*   /\* Redirect to the AUTH command if asked to. *\/ */
+/*   if (use_auth) */
+/*     { */
+/*       return do_auth (app, "OPENPGP.3", pincb, pincb_arg, */
+/*                       data, datalen, */
+/*                       outdata, outdatalen); */
+/*     } */
 
   /* Show the number of signature done using this key.  */
   sigcount = get_sig_counter (app);

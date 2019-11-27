@@ -1964,7 +1964,7 @@ apdu_dev_list_start (const char *portstr, struct dev_list **l_p)
         if (pcsc_init () < 0)
           {
             npth_mutex_unlock (&reader_table_lock);
-            return gpg_error (GPG_ERR_NO_SERVICE);
+            return gpg_error (GPG_ERR_NO_ENGINE);
           }
 
       r = pcsc_list_readers (pcsc.context, NULL, NULL, &nreader);
@@ -1989,7 +1989,7 @@ apdu_dev_list_start (const char *portstr, struct dev_list **l_p)
           xfree (p);
           close_pcsc_reader (0);
           npth_mutex_unlock (&reader_table_lock);
-          return gpg_error (GPG_ERR_NO_SERVICE);
+          return gpg_error (GPG_ERR_NO_ENGINE);
         }
 
       dl->table = p;
