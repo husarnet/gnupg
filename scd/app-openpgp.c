@@ -4400,7 +4400,7 @@ do_sign (app_t app, const char *keyidstr, int hashalgo,
       0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,
       0x00, 0x04, 0x40  };
   int rc;
-  unsigned char data[19+64];
+  unsigned char data[4096];
   size_t datalen;
   unsigned long sigcount;
   int use_auth = 0;
@@ -4409,7 +4409,12 @@ do_sign (app_t app, const char *keyidstr, int hashalgo,
   if (!keyidstr || !*keyidstr)
     return gpg_error (GPG_ERR_INV_VALUE);
 
-/*   /\* Strip off known prefixes.  *\/ */
+  if (indatalen >= sizeof(data)) {
+    log_error ("data too long");
+    return gpg_error (GPG_ERR_INV_VALUE);
+  }
+  
+/*   /* Strip off known prefixes.  */
 /* #define X(a,b,c,d) \ */
 /*   if (hashalgo == GCRY_MD_ ## a                               \ */
 /*       && (d)                                                  \ */
